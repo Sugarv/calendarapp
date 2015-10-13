@@ -38,13 +38,21 @@
         <div class="form-group">
           <label for="title">Title</label>
           <input type="text" class="form-control" id="title" placeholder="Enter a Title" value="{{title}}">
-          <span class="label label-default">{{start}}</span>
-          <span class="label label-default">{{end}}</span>
+          <div class="input-group datetimepicker_s">
+            <span class="input-group-addon">Start: <i class="glyphicon glyphicon-calendar"></i></span>
+            <input class="set-due-date form-control" id="start" type="text"/>
+          </div>
+          <div class="input-group datetimepicker_f">
+            <span class="input-group-addon">Finish: <i class="glyphicon glyphicon-calendar"></i></span>
+            <input class="set-due-date form-control" id="end" type="text"/>
+          </div>
+
+
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default closeDialog" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary updateTitle">Save</button>
+        <button type="button" class="btn btn-primary updateEvent">Save</button>
         <button type="button" class="btn btn-danger deleteEvent">Delete</button>
       </div>
     </div>

@@ -1,12 +1,20 @@
 CalEvent = new Meteor.Collection("calevent");
 if (Meteor.isClient) {
+  // dialog template
   Template.dialog.events({
     "click .closeDialog": function(event, template){
        Session.set('editing_event',null);
     },
-    'click .updateTitle':function(evt,tmpl){
+    'click .updateEvent':function(evt,tmpl){
       var title = tmpl.find('#title').value;
-      Meteor.call('updateTitle',Session.get('editing_event'),title);
+      var start = tmpl.find('#start').value;
+      var end = tmpl.find('#end').value;
+      var data = {
+        title: title,
+        start: new Date(start),
+        end: new Date(end)
+      };
+      Meteor.call('updateEvent',Session.get('editing_event'),data);
       Session.set('editing_event',null);
     },
     'click .deleteEvent': function (evt,tmpl){
@@ -14,13 +22,14 @@ if (Meteor.isClient) {
       Session.set('editing_event',null);
     }
   });
-  Template.dialog.helpers({
+    Template.dialog.helpers({
     title: function(){
       var ce = CalEvent.findOne({_id:Session.get('editing_event')});
       return ce.title;
     },
     start: function(){
       var ce = CalEvent.findOne({_id:Session.get('editing_event')});
+      console.log(ce.start);
       return ce.start;
     },
     end: function(){
@@ -28,17 +37,32 @@ if (Meteor.isClient) {
       return ce.end;
     }
   });
-  Template.main.helpers({
-    editing_event: function(){
-      return Session.get('editing_event');
-    }
-  });
   Template.dialog.onRendered(function(){
-    if(Session.get('editDialog')){
-      var calevent = CalEvent.findOne({_id:Session.get('editDialog')});
+    if(Session.get('editing_event')){
+      var calevent = CalEvent.findOne({_id:Session.get('editing_event')});
       if (calevent){
         $('#title').val(calevent.title);
       }
+      this.$('.datetimepicker_s').datetimepicker({
+        defaultDate: calevent.start,
+        format: 'MM/DD/YYYY, hh:mm',
+        stepping: 30,
+        sideBySide: true,
+        showClose: true
+      });
+      this.$('.datetimepicker_f').datetimepicker({
+        defaultDate: calevent.end,
+        format: 'MM/DD/YYYY, hh:mm',
+        stepping: 30,
+        sideBySide: true,
+        showClose: true
+      });
+    }
+  });
+  // main template
+  Template.main.helpers({
+    editing_event: function(){
+      return Session.get('editing_event');
     }
   });
   Template.main.rendered= function () {
@@ -80,8 +104,13 @@ if (Meteor.isServer) {
       'saveCalEvent':function(ce){
          CalEvent.insert(ce);
       },
-      'updateTitle': function(id,title){
-        return CalEvent.update({_id:id}, {$set: {title:title}});
+      'updateEvent': function(id,data){
+        console.log(data);
+        return CalEvent.update({_id:id}, {$set: {
+          title: data.title,
+          start:data.start,
+          end: data.end
+        }});
       },
       'moveEvent': function(reqEvent){
         return CalEvent.update({_id:reqEvent._id},{
