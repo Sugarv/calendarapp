@@ -30,6 +30,9 @@ if (Meteor.isClient) {
     //console.log(events.length);
     return events;
   }
+  var fetchEvents = function () {
+
+  }
   // dialog template
   Template.dialog.events({
     "click .closeDialog": function(event, template){
@@ -94,10 +97,12 @@ if (Meteor.isClient) {
     editing_event: function(){
       return Session.get('editing_event');
     },
-    fetchSchedule: function() {
+    fetchAll: function() {
       return function(start, end, tz, callback) {
-        var events = fetchFromSchedule();
-        callback(events);
+        var sched = fetchFromSchedule();
+        var events = CalEvent.find().fetch();
+        var all = sched.concat(events);
+        callback(all);
       }
     },
     calOptions: function() {
@@ -108,7 +113,8 @@ if (Meteor.isClient) {
     },
     onEventClicked: function() {
       return function(calEvent, jsEvent, view) {
-        alert("Event clicked: "+calEvent.title);
+        console.log(calEvent._id);
+        //alert("Event clicked: "+calEvent.title);
       }
     },
     onDayClicked: function() {
@@ -125,6 +131,7 @@ if (Meteor.isClient) {
       this.autorun(function(){
          //CalEvent.find().fetch();
          fetchFromSchedule();
+         CalEvent.find().fetch();
          fc.fullCalendar('refetchEvents');
       });
   }
