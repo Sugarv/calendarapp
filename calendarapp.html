@@ -12,6 +12,9 @@
   {{/if}}
 </body>
 
+
+
+
 <template name="main">
   {{#if editing_event}}
     {{> dialog}}
@@ -19,9 +22,18 @@
   <div class="container">
     <h3>My Calendar App!</h3>
     {{> loginButtons}}
-    <div id="calendar">
 
-    </div>
+    {{>fullcalendar id="calendar"
+        defaultView='agendaWeek'
+        editable=true
+        allDaySlot=false
+        slotEventOverlap=false
+        events=fetchSchedule
+        selectConstraint='available'
+        eventClick=onEventClicked
+        dayClick = onDayClicked
+      }}
+      
   </div>
 
 </template>

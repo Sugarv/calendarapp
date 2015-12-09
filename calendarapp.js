@@ -1,5 +1,35 @@
+// for future use:
+// http://stackoverflow.com/questions/15161654/recurring-events-in-fullcalendar
+
 CalEvent = new Meteor.Collection("calevent");
 if (Meteor.isClient) {
+  var fetchFromSchedule = function() {
+    var fetch = Schedule.find({}).fetch();
+    var days = fetch[0].schedule.day;
+    var events = [];
+    //console.log(days);
+    var dayCnt = 0;
+    _.each(days, function(day){
+      _.each(day, function(slot){
+        var newEvent = {};
+        newEvent.title = 'slot';
+        newEvent.start = slot;
+        var tmpDate = moment(slot,"HH:mm").add(30,'minutes').format("HH:mm");
+        newEvent.end = tmpDate;
+        newEvent.color = 'green';
+        newEvent.rendering = 'background';
+        newEvent.allDay = 'false';
+        newEvent.id = 'available';
+        var tmp = [];
+        tmp.push(dayCnt);
+        newEvent.dow = tmp;
+        events.push(newEvent);
+      });
+      dayCnt += 1;
+    });
+    //console.log(events.length);
+    return events;
+  }
   // dialog template
   Template.dialog.events({
     "click .closeDialog": function(event, template){
@@ -55,7 +85,7 @@ if (Meteor.isClient) {
         format: 'MM/DD/YYYY, hh:mm',
         stepping: 30,
         sideBySide: true,
-        showClose: true
+        showClose: true,
       });
     }
   });
@@ -63,38 +93,40 @@ if (Meteor.isClient) {
   Template.main.helpers({
     editing_event: function(){
       return Session.get('editing_event');
+    },
+    fetchSchedule: function() {
+      return function(start, end, tz, callback) {
+        var events = fetchFromSchedule();
+        callback(events);
+      }
+    },
+    calOptions: function() {
+      return {
+            defaultView: 'basicWeek',
+            events: fetchSchedule
+        };
+    },
+    onEventClicked: function() {
+      return function(calEvent, jsEvent, view) {
+        alert("Event clicked: "+calEvent.title);
+      }
+    },
+    onDayClicked: function() {
+      return function(date, jsEvent, view){
+        if (jsEvent.target.classList.contains('fc-bgevent')) {
+          console.log(date.format());
+          console.log('bg clicked');
+        }
+      }
     }
   });
   Template.main.rendered= function () {
-      var calendar = $('#calendar').fullCalendar({
-        dayClick: function(date, allDay, jsEvent, view){
-          var calendarEvent = {};
-          calendarEvent.start = date;
-          calendarEvent.end = date;
-          calendarEvent.title = 'New Event';
-          calendarEvent.owner = Meteor.userId();
-          Meteor.call('saveCalEvent', calendarEvent);
-        },
-        eventClick:function(calEvent,jsEvent,view){
-          Session.set('editing_event',calEvent._id);
-          $('#title').val(calEvent.title);
-        },
-        eventDrop:function(reqEvent){
-          Meteor.call('moveEvent',reqEvent);
-        },
-        events: function(start,end,callback){
-          var calEvents = CalEvent.find({},{reactive:false}).fetch();
-          callback(calEvents);
-        },
-        editable: true,
-        selectable: true
-      }).data().fullCalendar;
-      Deps.autorun(function(){
-         CalEvent.find().fetch();
-         if (calendar){
-           calendar.refetchEvents();
-         }
-      })
+      var fc = this.$('.fc');
+      this.autorun(function(){
+         //CalEvent.find().fetch();
+         fetchFromSchedule();
+         fc.fullCalendar('refetchEvents');
+      });
   }
 }
 
